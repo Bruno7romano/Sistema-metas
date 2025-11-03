@@ -4,7 +4,7 @@ export default function Home() {
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            📅 Metas 2026 - Bruno & Zaira
+            🎯 Metas 2026 - Bruno & Zaira
           </h1>
           <p className="text-gray-600">
             Nossa jornada de crescimento e conquistas juntos 🚀
@@ -37,6 +37,15 @@ export default function Home() {
             prazo="31/12/2026"
             status="Em andamento"
             progresso={25}
+          />
+
+          <CardMeta
+            titulo="Dar de comer para Exu/pomba gira"
+            responsavel="Bruno"
+            categoria="Espiritualidade"
+            prazo="30/12/2025"
+            status="Pendente"
+            progresso={0}
           />
         </div>
       </div>

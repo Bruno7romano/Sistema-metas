@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { FormNovaMeta } from '@/componentes/formularioNovaMeta'
 
 type Meta = {
   id: number
@@ -29,13 +30,18 @@ export default function Home() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Erro ao buscar metas:', error)
+        console.error('Erro ao buscar metas:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         return
       }
 
       setMetas(data || [])
     } catch (error) {
-      console.error('Erro:', error)
+      console.error('Erro ao buscar metas:', error)
     } finally {
       setLoading(false)
     }
@@ -62,6 +68,10 @@ export default function Home() {
           <p className="text-gray-600">
             Nossa jornada de crescimento e conquistas juntos 🚀
           </p>
+        </div>
+
+        <div className="mb-6">
+          <FormNovaMeta onMetaAdicionada={buscarMetas} />
         </div>
 
         {metas.length === 0 ? (

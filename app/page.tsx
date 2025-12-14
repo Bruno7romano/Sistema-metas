@@ -1,4 +1,57 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+
+type Meta = {
+  id: number
+  titulo: string
+  responsavel: string
+  categoria: string
+  prazo: string
+  status: string
+  progresso: number
+}
+
 export default function Home() {
+  const [metas, setMetas] = useState<Meta[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    buscarMetas()
+  }, [])
+
+  async function buscarMetas() {
+    try {
+      const { data, error } = await supabase
+        .from('metas')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Erro ao buscar metas:', error)
+        return
+      }
+
+      setMetas(data || [])
+    } catch (error) {
+      console.error('Erro:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando metas...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
@@ -11,92 +64,62 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid gap-4">
-          <CardMeta 
-            titulo="Perder 5kg"
-            responsavel="Bruno"
-            categoria="Saúde"
-            prazo="31/07/2026"
-            status="Em andamento"
-            progresso={40}
-          />
-          
-          <CardMeta 
-            titulo="Tirar carteira de motorista"
-            responsavel="Zaira"
-            categoria="Carreira"
-            prazo="30/06/2026"
-            status="Pendente"
-            progresso={0}
-          />
-          
-          <CardMeta 
-            titulo="Economizar R$ 20.000"
-            responsavel="Bruno, Zaira"
-            categoria="Financeiro"
-            prazo="31/12/2026"
-            status="Em andamento"
-            progresso={25}
-          />
-
-          <CardMeta
-            titulo="Dar de comer para Exu/pomba gira"
-            responsavel="Bruno"
-            categoria="Espiritualidade"
-            prazo="30/12/2025"
-            status="Pendente"
-            progresso={0}
-          />
-        </div>
+        {metas.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <p className="text-gray-600">Nenhuma meta cadastrada ainda.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {metas.map(meta => (
+              <CardMeta key={meta.id} {...meta} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function CardMeta({ titulo, responsavel, categoria, prazo, status, progresso }: {
-  titulo: string
-  responsavel: string
-  categoria: string
-  prazo: string
-  status: string
-  progresso: number
-}) {
-  const coresStatus = {
+function CardMeta({ titulo, responsavel, categoria, prazo, status, progresso }: Omit<Meta, 'id'>) {
+  const coresStatus: Record<string, string> = {
     'Em andamento': 'bg-yellow-100 text-yellow-800',
     'Pendente': 'bg-red-100 text-red-800',
     'Concluída': 'bg-green-100 text-green-800',
   }
 
-  const coresCategorias = {
+  const coresCategorias: Record<string, string> = {
     'Saúde': 'bg-blue-100 text-blue-800',
     'Carreira': 'bg-orange-100 text-orange-800',
     'Financeiro': 'bg-green-100 text-green-800',
     'Lazer': 'bg-pink-100 text-pink-800',
-    'Espiritual': 'bg-purple-100 text-purple-800',
+    'Espiritualidade': 'bg-purple-100 text-purple-800',
   }
+
+  // Formatar data brasileira
+  const dataFormatada = new Date(prazo + 'T00:00:00').toLocaleDateString('pt-BR')
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-bold text-gray-900">{titulo}</h3>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${coresStatus[status as keyof typeof coresStatus]}`}>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${coresStatus[status] || 'bg-gray-100 text-gray-800'}`}>
           {status}
         </span>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 flex-wrap">
         {responsavel.split(',').map((resp, i) => (
           <span key={i} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
             {resp.trim()}
           </span>
         ))}
-        <span className={`px-3 py-1 rounded-full text-sm ${coresCategorias[categoria as keyof typeof coresCategorias]}`}>
+        <span className={`px-3 py-1 rounded-full text-sm ${coresCategorias[categoria] || 'bg-gray-100 text-gray-800'}`}>
           📁 {categoria}
         </span>
       </div>
 
       <div className="text-sm text-gray-600 mb-4">
-        📅 Prazo: {prazo}
+        📅 Prazo: {dataFormatada}
       </div>
 
       <div className="space-y-2">

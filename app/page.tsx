@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { FormNovaMeta } from '@/componentes/formularioNovaMeta'
+import { FormEditarMeta } from '@/componentes/formularioEditarMeta'
 
 type Meta = {
   id: number
@@ -17,6 +18,7 @@ type Meta = {
 export default function Home() {
   const [metas, setMetas] = useState<Meta[]>([])
   const [loading, setLoading] = useState(true)
+  const [metaEditando, setMetaEditando] = useState<Meta | null>(null)
 
   useEffect(() => {
     buscarMetas()
@@ -74,6 +76,17 @@ export default function Home() {
           <FormNovaMeta onMetaAdicionada={buscarMetas} />
         </div>
 
+        {metaEditando && (
+          <FormEditarMeta
+            meta={metaEditando}
+            onCancelar={() => setMetaEditando(null)}
+            onMetaEditada={() => {
+              buscarMetas()
+              setMetaEditando(null)
+            }}
+          />
+        )}
+
         {metas.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <p className="text-gray-600">Nenhuma meta cadastrada ainda.</p>
@@ -81,7 +94,8 @@ export default function Home() {
         ) : (
           <div className="grid gap-4">
             {metas.map(meta => (
-              <CardMeta key={meta.id} {...meta} />
+              <CardMeta key={meta.id} {...meta}
+              onEditar={() => setMetaEditando(meta)} />
             ))}
           </div>
         )}
@@ -90,7 +104,7 @@ export default function Home() {
   )
 }
 
-function CardMeta({ titulo, responsavel, categoria, prazo, status, progresso }: Omit<Meta, 'id'>) {
+function CardMeta({ titulo, responsavel, categoria, prazo, status, progresso, onEditar }: Omit<Meta, 'id'> & { onEditar: () => void }) {
   const coresStatus: Record<string, string> = {
     'Em andamento': 'bg-yellow-100 text-yellow-800',
     'Pendente': 'bg-red-100 text-red-800',
@@ -112,9 +126,17 @@ function CardMeta({ titulo, responsavel, categoria, prazo, status, progresso }: 
     <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-bold text-gray-900">{titulo}</h3>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${coresStatus[status] || 'bg-gray-100 text-gray-800'}`}>
-          {status}
-        </span>
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={onEditar}
+            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+          >
+            ✏️ Editar
+          </button>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${coresStatus[status] || 'bg-gray-100 text-gray-800'}`}>
+            {status}
+          </span>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-4 flex-wrap">

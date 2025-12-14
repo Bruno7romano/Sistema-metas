@@ -49,6 +49,30 @@ export default function Home() {
     }
   }
 
+  async function deletarMeta(id: number) {
+    if (!confirm('Tem certeza que deseja deletar esta meta?')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('metas')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        alert('Erro ao deletar meta: ' + error.message)
+        return
+      }
+
+      alert('✅ Meta deletada com sucesso!')
+      buscarMetas()
+    } catch (error) {
+      console.error('Erro ao deletar meta:', error)
+      alert('Erro ao deletar meta')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -94,8 +118,12 @@ export default function Home() {
         ) : (
           <div className="grid gap-4">
             {metas.map(meta => (
-              <CardMeta key={meta.id} {...meta}
-              onEditar={() => setMetaEditando(meta)} />
+              <CardMeta
+                key={meta.id}
+                {...meta}
+                onEditar={() => setMetaEditando(meta)}
+                onDeletar={() => deletarMeta(meta.id)}
+              />
             ))}
           </div>
         )}
@@ -104,7 +132,7 @@ export default function Home() {
   )
 }
 
-function CardMeta({ titulo, responsavel, categoria, prazo, status, progresso, onEditar }: Omit<Meta, 'id'> & { onEditar: () => void }) {
+function CardMeta({ titulo, responsavel, categoria, prazo, status, progresso, onEditar, onDeletar }: Omit<Meta, 'id'> & { onEditar: () => void, onDeletar: () => void }) {
   const coresStatus: Record<string, string> = {
     'Em andamento': 'bg-yellow-100 text-yellow-800',
     'Pendente': 'bg-red-100 text-red-800',
@@ -132,6 +160,15 @@ function CardMeta({ titulo, responsavel, categoria, prazo, status, progresso, on
             className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
           >
             ✏️ Editar
+          </button>
+          <button
+            onClick={onDeletar}
+            className="text-gray-600 hover:text-red-600 transition-colors p-1"
+            title="Deletar meta"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
           </button>
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${coresStatus[status] || 'bg-gray-100 text-gray-800'}`}>
             {status}
